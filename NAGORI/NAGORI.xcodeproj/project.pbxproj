@@ -19,22 +19,9 @@
 		16C963A8305B6E9D004D8AC7 /* NAGORI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = NAGORI.app; path = "/Users/hinato0426/Desktop/First-semester-screening/NAGORI/build/Debug-iphoneos/NAGORI.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		165EAE44305B92E3006964BA /* Exceptions for "NAGORI" folder in "NAGORI" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Untitled.swift,
-			);
-			target = 16C963A7305B6E9D004D8AC7 /* NAGORI */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		16C963AA305B6E9D004D8AC7 /* NAGORI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				165EAE44305B92E3006964BA /* Exceptions for "NAGORI" folder in "NAGORI" target */,
-			);
 			path = NAGORI;
 			sourceTree = "<group>";
 		};
