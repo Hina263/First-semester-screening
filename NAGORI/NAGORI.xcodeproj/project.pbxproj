@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		165EAE43305B92E2006964BA /* Supabaseclient.txt in Resources */ = {isa = PBXBuildFile; fileRef = 165EAE42305B92E2006964BA /* Supabaseclient.txt */; };
 		16C963C4305B8221004D8AC7 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 16C963C3305B8221004D8AC7 /* Auth */; };
 		16C963C6305B8221004D8AC7 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 16C963C5305B8221004D8AC7 /* Realtime */; };
 		16C963C8305B8221004D8AC7 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 16C963C7305B8221004D8AC7 /* Storage */; };
@@ -14,12 +15,26 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		16C963A8305B6E9D004D8AC7 /* NAGORI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NAGORI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		165EAE42305B92E2006964BA /* Supabaseclient.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Supabaseclient.txt; sourceTree = "<group>"; };
+		16C963A8305B6E9D004D8AC7 /* NAGORI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = NAGORI.app; path = "/Users/hinato0426/Desktop/First-semester-screening/NAGORI/build/Debug-iphoneos/NAGORI.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		165EAE44305B92E3006964BA /* Exceptions for "NAGORI" folder in "NAGORI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Untitled.swift,
+			);
+			target = 16C963A7305B6E9D004D8AC7 /* NAGORI */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		16C963AA305B6E9D004D8AC7 /* NAGORI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				165EAE44305B92E3006964BA /* Exceptions for "NAGORI" folder in "NAGORI" target */,
+			);
 			path = NAGORI;
 			sourceTree = "<group>";
 		};
@@ -44,16 +59,8 @@
 			isa = PBXGroup;
 			children = (
 				16C963AA305B6E9D004D8AC7 /* NAGORI */,
-				16C963A9305B6E9D004D8AC7 /* Products */,
+				165EAE42305B92E2006964BA /* Supabaseclient.txt */,
 			);
-			sourceTree = "<group>";
-		};
-		16C963A9305B6E9D004D8AC7 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				16C963A8305B6E9D004D8AC7 /* NAGORI.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -113,7 +120,7 @@
 				16C963C2305B8221004D8AC7 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 16C963A9305B6E9D004D8AC7 /* Products */;
+			productRefGroup = 16C9639F305B6E9D004D8AC7;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -127,6 +134,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				165EAE43305B92E2006964BA /* Supabaseclient.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
