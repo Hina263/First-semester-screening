@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		16C963C4305B8221004D8AC7 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 16C963C3305B8221004D8AC7 /* Auth */; };
+		16C963C6305B8221004D8AC7 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 16C963C5305B8221004D8AC7 /* Realtime */; };
+		16C963C8305B8221004D8AC7 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 16C963C7305B8221004D8AC7 /* Storage */; };
+		16C963CA305B8221004D8AC7 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 16C963C9305B8221004D8AC7 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		16C963A8305B6E9D004D8AC7 /* NAGORI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NAGORI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +30,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16C963CA305B8221004D8AC7 /* Supabase in Frameworks */,
+				16C963C8305B8221004D8AC7 /* Storage in Frameworks */,
+				16C963C4305B8221004D8AC7 /* Auth in Frameworks */,
+				16C963C6305B8221004D8AC7 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +76,10 @@
 			);
 			name = NAGORI;
 			packageProductDependencies = (
+				16C963C3305B8221004D8AC7 /* Auth */,
+				16C963C5305B8221004D8AC7 /* Realtime */,
+				16C963C7305B8221004D8AC7 /* Storage */,
+				16C963C9305B8221004D8AC7 /* Supabase */,
 			);
 			productName = NAGORI;
 			productReference = 16C963A8305B6E9D004D8AC7 /* NAGORI.app */;
@@ -94,6 +109,9 @@
 			);
 			mainGroup = 16C9639F305B6E9D004D8AC7;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				16C963C2305B8221004D8AC7 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 16C963A9305B6E9D004D8AC7 /* Products */;
 			projectDirPath = "";
@@ -251,6 +269,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5VQX3AZHQS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -282,6 +301,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5VQX3AZHQS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -328,6 +348,40 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		16C963C2305B8221004D8AC7 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		16C963C3305B8221004D8AC7 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16C963C2305B8221004D8AC7 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		16C963C5305B8221004D8AC7 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16C963C2305B8221004D8AC7 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		16C963C7305B8221004D8AC7 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16C963C2305B8221004D8AC7 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		16C963C9305B8221004D8AC7 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 16C963C2305B8221004D8AC7 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 16C963A0305B6E9D004D8AC7 /* Project object */;
 }
