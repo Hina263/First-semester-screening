@@ -9,6 +9,7 @@ import SwiftUI
 import Supabase
 
 struct ContentView: View {
+    @EnvironmentObject var auth: AuthManager
     @State private var connectionStatus: String = "未確認"
     @State private var isChecking = false
 
@@ -28,6 +29,12 @@ struct ContentView: View {
                 Task { await checkConnection() }
             }
             .disabled(isChecking)
+
+            Divider()
+
+            Button("ログアウト", role: .destructive) {
+                Task { await auth.signOut() }
+            }
         }
         .padding()
     }
