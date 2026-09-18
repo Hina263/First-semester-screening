@@ -16,7 +16,7 @@
 
 /* Begin PBXFileReference section */
 		165EAE42305B92E2006964BA /* Supabaseclient.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Supabaseclient.txt; sourceTree = "<group>"; };
-		16C963A8305B6E9D004D8AC7 /* NAGORI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = NAGORI.app; path = "/Users/hinato0426/Desktop/First-semester-screening/NAGORI/build/Debug-iphoneos/NAGORI.app"; sourceTree = "<absolute>"; };
+		1F76E2A4305CEA410067E1FB /* NAGORI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NAGORI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -47,6 +47,7 @@
 			children = (
 				16C963AA305B6E9D004D8AC7 /* NAGORI */,
 				165EAE42305B92E2006964BA /* Supabaseclient.txt */,
+				1F76E2A4305CEA410067E1FB /* NAGORI.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -76,7 +77,7 @@
 				16C963C9305B8221004D8AC7 /* Supabase */,
 			);
 			productName = NAGORI;
-			productReference = 16C963A8305B6E9D004D8AC7 /* NAGORI.app */;
+			productReference = 1F76E2A4305CEA410067E1FB /* NAGORI.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
