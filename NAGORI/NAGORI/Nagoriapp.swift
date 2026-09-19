@@ -1,4 +1,7 @@
 //
+//  NAGORIApp.swift
+//  NAGORI
+//
 //  Created by 長野日向人 on 2026/09/17.
 //
 
@@ -24,12 +27,15 @@ struct RootView: View {
         switch auth.state {
         case .loading:
             ProgressView()
-        case .signedOut, .failed:
+        case .signedOut:
             LoginView()
-        case .needsProfileSetup:
-            ProfileSetupView()
-        case .signedIn:
-            ContentView() // TODO: M-07のマップ画面に置き換える
+        case .signedIn(let profile):
+            if profile == nil {
+                // まだusersに行がない=初回。専用の初期設定画面を表示
+                ProfileSetupView()
+            } else {
+                ContentView() // TODO: 友人が追加するメインマップ画面に置き換える
+            }
         }
     }
 }

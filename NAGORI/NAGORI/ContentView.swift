@@ -12,31 +12,50 @@ struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @State private var connectionStatus: String = "未確認"
     @State private var isChecking = false
+    @State private var isEditingProfile = false
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            VStack(spacing: 16) {
+                Image(systemName: "globe")
+                    .imageScale(.large)
+                    .foregroundStyle(.tint)
+                Text("Hello, world!")
 
-            Divider()
+                Divider()
 
-            Text("Supabase接続: \(connectionStatus)")
-                .font(.caption)
+                Text("Supabase接続: \(connectionStatus)")
+                    .font(.caption)
 
-            Button(isChecking ? "確認中..." : "接続テスト") {
-                Task { await checkConnection() }
+                Button(isChecking ? "確認中..." : "接続テスト") {
+                    Task { await checkConnection() }
+                }
+                .disabled(isChecking)
+
+                Divider()
+
+                NavigationLink {
+                    ProfileView()
+                } label: {
+                    Text("マイページ")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button("プロフィールを編集") {
+                    isEditingProfile = true
+                }
+                .buttonStyle(.bordered)
+
+                Button("ログアウト", role: .destructive) {
+                    Task { await auth.signOut() }
+                }
             }
-            .disabled(isChecking)
-
-            Divider()
-
-            Button("ログアウト", role: .destructive) {
-                Task { await auth.signOut() }
+            .padding()
+            .sheet(isPresented: $isEditingProfile) {
+                ProfileEditView()
             }
         }
-        .padding()
     }
 
     private func checkConnection() async {
