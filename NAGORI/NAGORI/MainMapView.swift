@@ -47,7 +47,7 @@ struct MainMapView: View {
             ZStack(alignment: .bottomTrailing) {
                 // MARK: - 1. Map (60日以内の投稿のみをフィルタ表示)
                 Map(position: $cameraPosition) {
-                    ForEach(posts.filter { $0.isFresh }) { post in
+                    ForEach(posts.filter { $0.isFresh && $0.hasCoordinate }) { post in
                         Annotation(post.locationName, coordinate: post.coordinate) {
                             Button {
                                 selectedPost = post
@@ -95,25 +95,18 @@ struct MainMapView: View {
                 }
             }
             .sheet(isPresented: $isShowingCreatePost) {
-                CreatePostView()
+                CreatePostView { newPost in
+                    posts.insert(newPost, at: 0)
+                }
             }
             .sheet(isPresented: $isShowingMyPage) {
-                MyPageView()
+                NavigationStack {
+                    ProfileView()
+                }
             }
             .sheet(item: $selectedPost) { post in
-                PostDetailView(
-                    post: PostDetailItem(
-                        authorName: post.authorName,
-                        authorIconName: "person.crop.circle.fill",
-                        spotName: post.locationName,
-                        prefecture: post.prefecture,
-                        comment: post.comment,
-                        postedAt: post.postedAt,
-                        coordinate: post.coordinate,
-                        image: post.image
-                    )
-                )
-                .presentationDetents([.medium, .large])
+                PostDetailView(post: post)
+                    .presentationDetents([.medium, .large])
             }
         }
     }
@@ -125,88 +118,4 @@ private func daysAgo(_ days: Int) -> Date {
 
 #Preview {
     MainMapView()
-}
-
-// =================================================================
-// MARK: - 他メンバーの実装が揃うまでの暫定スタブ（仮定義）
-// 他の担当者が本番のPostや各Viewを作成・合流させた際、
-// 以下のブロックを削除（またはコメントアウト）してください。
-// =================================================================
-
-struct Post: Identifiable {
-    let id = UUID()
-    let location: CLLocation
-    let prefecture: String
-    let locationName: String
-    let comment: String
-    let postedAt: Date
-    var authorName: String = "匿名"
-    var image: UIImage? = nil
-    
-    var coordinate: CLLocationCoordinate2D {
-        location.coordinate
-    }
-    
-    // 60日以内の投稿判定
-    var isFresh: Bool {
-        let days = Calendar.current.dateComponents([.day], from: postedAt, to: Date()).day ?? 0
-        return days <= 60
-    }
-    
-    // 経過日数に応じたピンの色
-    var pinColor: Color {
-        let days = Calendar.current.dateComponents([.day], from: postedAt, to: Date()).day ?? 0
-        switch days {
-        case 0...7:
-            return .pink
-        case 8...21:
-            return .pink.opacity(0.5)
-        case 22...45:
-            return .brown.opacity(0.7)
-        default:
-            return .brown
-        }
-    }
-}
-
-struct PostDetailItem {
-    let authorName: String
-    let authorIconName: String
-    let spotName: String
-    let prefecture: String
-    let comment: String
-    let postedAt: Date
-    let coordinate: CLLocationCoordinate2D
-    let image: UIImage?
-}
-
-struct CreatePostView: View {
-    var body: some View {
-        NavigationStack {
-            Text("新規投稿画面（作成予定）")
-                .navigationTitle("投稿作成")
-        }
-    }
-}
-
-struct MyPageView: View {
-    var body: some View {
-        NavigationStack {
-            Text("マイページ画面（作成予定）")
-                .navigationTitle("マイページ")
-        }
-    }
-}
-
-struct PostDetailView: View {
-    let post: PostDetailItem
-    var body: some View {
-        VStack(spacing: 16) {
-            Text(post.spotName)
-                .font(.title2.bold())
-            Text(post.comment)
-                .foregroundColor(.secondary)
-        }
-        .padding()
-    }
 }
