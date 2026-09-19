@@ -1,17 +1,16 @@
 //
-//  ProfileSetupView.swift
+//  ProfileEditView.swift
 //  NAGORI
 //
-//  プロフィール初期設定（初回ログイン時のみ）
-//  ProfileEditViewと同じ構成。キャンセルはできず、保存すると
-//  AuthManagerのstateが自動で切り替わってホーム（将来的にはメインマップ）へ進む。
+//  プロフィール編集（シートで表示）。名前とアイコンのみ編集可能。
 //
 
 import SwiftUI
 import PhotosUI
 
-struct ProfileSetupView: View {
+struct ProfileEditView: View {
     @EnvironmentObject var auth: AuthManager
+    @Environment(\.dismiss) private var dismiss
 
     @State private var userName: String = ""
     @State private var isSaving = false
@@ -57,9 +56,12 @@ struct ProfileSetupView: View {
 
                 Spacer()
             }
-            .navigationTitle("プロフィール設定")
+            .navigationTitle("プロフィール編集")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("キャンセル") { dismiss() }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(isSaving ? "保存中..." : "保存") {
                         Task { await save() }
@@ -67,6 +69,9 @@ struct ProfileSetupView: View {
                     .foregroundStyle(Color.pink)
                     .disabled(!canSubmit)
                 }
+            }
+            .onAppear {
+                userName = auth.currentProfile?.userName ?? ""
             }
             .onChange(of: selectedItem) { _, newItem in
                 Task { await loadSelectedImage(newItem) }
@@ -113,6 +118,14 @@ struct ProfileSetupView: View {
             previewImage
                 .resizable()
                 .scaledToFill()
+        } else if let urlString = auth.currentProfile?.iconUrl, let url = URL(string: urlString) {
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image.resizable().scaledToFill()
+                } else {
+                    placeholderAvatar
+                }
+            }
         } else {
             placeholderAvatar
         }
@@ -150,7 +163,7 @@ struct ProfileSetupView: View {
         isSaving = true
         defer { isSaving = false }
 
-        var iconUrl: String?
+        var iconUrl = auth.currentProfile?.iconUrl
 
         if let pendingImageData {
             isUploadingAvatar = true
@@ -165,8 +178,10 @@ struct ProfileSetupView: View {
         }
 
         await auth.saveProfile(userName: userName, iconUrl: iconUrl)
-        // 成功するとauth.stateが自動でsignedIn(profile)に切り替わり、
-        // RootViewが自動でこの画面からホームへ切り替える
+
+        if auth.currentProfile != nil {
+            dismiss()
+        }
     }
 }
 
@@ -188,6 +203,6 @@ private extension UIImage {
 }
 
 #Preview {
-    ProfileSetupView()
+    ProfileEditView()
         .environmentObject(AuthManager.shared)
 }

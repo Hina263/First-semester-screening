@@ -13,88 +13,105 @@ struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @State private var connectionStatus: String = "未確認"
     @State private var isChecking = false
-    
+    @State private var isEditingProfile = false
+
     // 通報画面を表示するためのフラグと動的取得するID
     @State private var showReportView = false
     @State private var targetPostId: String = ""
     @State private var targetUserName: String = "テストユーザー"
     @State private var isLoadingPost = false
-    
+
     // フォロー一覧画面を表示するためのフラグ
     @State private var showUserList = false
-    
+
     @StateObject private var locationManager = LocationManager()
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            VStack(spacing: 16) {
+                Image(systemName: "globe")
+                    .imageScale(.large)
+                    .foregroundStyle(.tint)
+                Text("Hello, world!")
 
-            Divider()
+                Divider()
 
-            Text("Supabase接続: \(connectionStatus)")
-                .font(.caption)
+                Text("Supabase接続: \(connectionStatus)")
+                    .font(.caption)
 
-            Button(isChecking ? "確認中..." : "接続テスト") {
-                Task { await checkConnection() }
-            }
-            .disabled(isChecking)
-
-            Divider()
-
-            // 通報機能をテストするためのボタン（タップ時にSupabaseから実在の投稿IDを取得）
-            Button(isLoadingPost ? "読み込み中..." : "【テスト】通報画面を開く") {
-                Task {
-                    await prepareAndOpenReportView()
+                Button(isChecking ? "確認中..." : "接続テスト") {
+                    Task { await checkConnection() }
                 }
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(isLoadingPost)
+                .disabled(isChecking)
 
-            Divider()
+                Divider()
 
-            // フォロー一覧機能をテストするためのボタン
-            Button("【テスト】フォロー一覧を開く") {
-                showUserList = true
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.pink)
+                NavigationLink {
+                    ProfileView()
+                } label: {
+                    Text("マイページ")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
 
-            Divider()
-            
-            // MARK: - M-05 位置情報取得・丸め処理の動作確認エリア
-            VStack(alignment: .leading, spacing: 10) {
-                Text("📍 位置情報取得テスト (M-05)")
-                    .font(.headline)
+                Button("プロフィールを編集") {
+                    isEditingProfile = true
+                }
+                .buttonStyle(.bordered)
 
-                if let raw = locationManager.rawLocation, let rounded = locationManager.roundedLocation {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("生座標 (Raw):")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        Text("Lat: \(raw.latitude), Lon: \(raw.longitude)")
-                            .font(.footnote)
+                Divider()
 
-                        Text("丸め座標 (Rounded 3桁):")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .padding(.top, 2)
-                        Text("Lat: \(rounded.latitude), Lon: \(rounded.longitude)")
-                            .font(.footnote)
-                            .bold()
-                            .foregroundColor(.blue)
+                // 通報機能をテストするためのボタン（タップ時にSupabaseから実在の投稿IDを取得）
+                Button(isLoadingPost ? "読み込み中..." : "【テスト】通報画面を開く") {
+                    Task {
+                        await prepareAndOpenReportView()
                     }
-                } else {
-                    Text("位置情報: 未取得")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
                 }
+                .buttonStyle(.borderedProminent)
+                .disabled(isLoadingPost)
 
-                Button("位置情報を取得する") {
-                    locationManager.requestPermission()
-                    locationManager.requestLocation()
+                Divider()
+
+                // フォロー一覧機能をテストするためのボタン
+                Button("【テスト】フォロー一覧を開く") {
+                    showUserList = true
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.pink)
+
+                Divider()
+
+                // MARK: - M-05 位置情報取得・丸め処理の動作確認エリア
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("📍 位置情報取得テスト (M-05)")
+                        .font(.headline)
+
+                    if let raw = locationManager.rawLocation, let rounded = locationManager.roundedLocation {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("生座標 (Raw):")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                            Text("Lat: \(raw.latitude), Lon: \(raw.longitude)")
+                                .font(.footnote)
+
+                            Text("丸め座標 (Rounded 3桁):")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .padding(.top, 2)
+                            Text("Lat: \(rounded.latitude), Lon: \(rounded.longitude)")
+                                .font(.footnote)
+                                .bold()
+                                .foregroundColor(.blue)
+                        }
+                    } else {
+                        Text("位置情報: 未取得")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Button("位置情報を取得する") {
+                        locationManager.requestPermission()
+                        locationManager.requestLocation()
                     }
                     .buttonStyle(.bordered)
                 }
@@ -102,20 +119,22 @@ struct ContentView: View {
                 .background(Color.secondary.opacity(0.1))
                 .cornerRadius(10)
 
-            Divider()
+                Divider()
 
-            Button("ログアウト", role: .destructive) {
-                Task { await auth.signOut() }
+                Button("ログアウト", role: .destructive) {
+                    Task { await auth.signOut() }
+                }
             }
-        }
-        .padding()
-        // 通報画面をポップアップ表示
-        .sheet(isPresented: $showReportView) {
-            ReportView(targetPostId: targetPostId, targetUserName: targetUserName)
-        }
-        // フォロー一覧画面をポップアップ表示
-        .sheet(isPresented: $showUserList) {
-            UserListView(listType: .following)
+            .padding()
+            .sheet(isPresented: $isEditingProfile) {
+                ProfileEditView()
+            }
+            .sheet(isPresented: $showReportView) {
+                ReportView(targetPostId: targetPostId, targetUserName: targetUserName)
+            }
+            .sheet(isPresented: $showUserList) {
+                UserListView(listType: .following)
+            }
         }
     }
 
@@ -123,12 +142,12 @@ struct ContentView: View {
     private func prepareAndOpenReportView() async {
         isLoadingPost = true
         defer { isLoadingPost = false }
-        
+
         do {
             struct PostItem: Codable {
                 let id: UUID
             }
-            
+
             // Supabaseの posts テーブルから最新の投稿を1件取得する
             let posts: [PostItem] = try await SupabaseManager.shared.client
                 .from("posts")
@@ -136,7 +155,7 @@ struct ContentView: View {
                 .limit(1)
                 .execute()
                 .value
-            
+
             if let firstPost = posts.first {
                 self.targetPostId = firstPost.id.uuidString
                 self.showReportView = true

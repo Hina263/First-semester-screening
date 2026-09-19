@@ -1,4 +1,7 @@
 //
+//  LoginView.swift
+//  NAGORI
+//
 //  M-01: メールアドレス＋パスワードでのログイン/新規登録
 //
 
@@ -41,7 +44,7 @@ struct LoginView: View {
                 formFields
                     .padding(.horizontal, 28)
 
-                if case .failed(let message) = auth.state {
+                if let message = auth.errorMessage {
                     Text(message)
                         .font(.footnote)
                         .foregroundStyle(.red)
