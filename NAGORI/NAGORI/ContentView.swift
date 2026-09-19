@@ -24,6 +24,9 @@ struct ContentView: View {
     // フォロー一覧画面を表示するためのフラグ
     @State private var showUserList = false
 
+    // メインマップ画面を表示するためのフラグ（M-04/M-06/M-10 の動作確認用）
+    @State private var showMainMap = false
+
     @StateObject private var locationManager = LocationManager()
 
     var body: some View {
@@ -81,6 +84,15 @@ struct ContentView: View {
 
                 Divider()
 
+                // マップ＋投稿作成＋投稿詳細をテストするためのボタン
+                Button("【テスト】桜マップを開く") {
+                    showMainMap = true
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+
+                Divider()
+
                 // MARK: - M-05 位置情報取得・丸め処理の動作確認エリア
                 VStack(alignment: .leading, spacing: 10) {
                     Text("📍 位置情報取得テスト (M-05)")
@@ -134,6 +146,11 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showUserList) {
                 UserListView(listType: .following)
+            }
+            .sheet(isPresented: $showMainMap) {
+                // MainMapView は内部に NavigationStack を持っているのでそのまま表示する。
+                // 下スワイプで閉じられる。
+                MainMapView()
             }
         }
     }
