@@ -7,12 +7,24 @@
 
 import SwiftUI
 import Supabase
+import CoreLocation
 
 struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @State private var connectionStatus: String = "未確認"
     @State private var isChecking = false
     @State private var isEditingProfile = false
+
+    // 通報画面を表示するためのフラグと動的取得するID
+    @State private var showReportView = false
+    @State private var targetPostId: String = ""
+    @State private var targetUserName: String = "テストユーザー"
+    @State private var isLoadingPost = false
+
+    // フォロー一覧画面を表示するためのフラグ
+    @State private var showUserList = false
+
+    @StateObject private var locationManager = LocationManager()
 
     var body: some View {
         NavigationStack {
@@ -47,6 +59,68 @@ struct ContentView: View {
                 }
                 .buttonStyle(.bordered)
 
+                Divider()
+
+                // 通報機能をテストするためのボタン（タップ時にSupabaseから実在の投稿IDを取得）
+                Button(isLoadingPost ? "読み込み中..." : "【テスト】通報画面を開く") {
+                    Task {
+                        await prepareAndOpenReportView()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isLoadingPost)
+
+                Divider()
+
+                // フォロー一覧機能をテストするためのボタン
+                Button("【テスト】フォロー一覧を開く") {
+                    showUserList = true
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.pink)
+
+                Divider()
+
+                // MARK: - M-05 位置情報取得・丸め処理の動作確認エリア
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("📍 位置情報取得テスト (M-05)")
+                        .font(.headline)
+
+                    if let raw = locationManager.rawLocation, let rounded = locationManager.roundedLocation {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("生座標 (Raw):")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                            Text("Lat: \(raw.latitude), Lon: \(raw.longitude)")
+                                .font(.footnote)
+
+                            Text("丸め座標 (Rounded 3桁):")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .padding(.top, 2)
+                            Text("Lat: \(rounded.latitude), Lon: \(rounded.longitude)")
+                                .font(.footnote)
+                                .bold()
+                                .foregroundColor(.blue)
+                        }
+                    } else {
+                        Text("位置情報: 未取得")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Button("位置情報を取得する") {
+                        locationManager.requestPermission()
+                        locationManager.requestLocation()
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(10)
+
+                Divider()
+
                 Button("ログアウト", role: .destructive) {
                     Task { await auth.signOut() }
                 }
@@ -55,6 +129,41 @@ struct ContentView: View {
             .sheet(isPresented: $isEditingProfile) {
                 ProfileEditView()
             }
+            .sheet(isPresented: $showReportView) {
+                ReportView(targetPostId: targetPostId, targetUserName: targetUserName)
+            }
+            .sheet(isPresented: $showUserList) {
+                UserListView(listType: .following)
+            }
+        }
+    }
+
+    // MARK: - 通報テスト用の投稿IDを動的に取得する処理
+    private func prepareAndOpenReportView() async {
+        isLoadingPost = true
+        defer { isLoadingPost = false }
+
+        do {
+            struct PostItem: Codable {
+                let id: UUID
+            }
+
+            // Supabaseの posts テーブルから最新の投稿を1件取得する
+            let posts: [PostItem] = try await SupabaseManager.shared.client
+                .from("posts")
+                .select("id")
+                .limit(1)
+                .execute()
+                .value
+
+            if let firstPost = posts.first {
+                self.targetPostId = firstPost.id.uuidString
+                self.showReportView = true
+            } else {
+                print("エラー: 通報対象となる投稿がデータベースにありません")
+            }
+        } catch {
+            print("投稿IDの取得エラー: \(error.localizedDescription)")
         }
     }
 
@@ -62,17 +171,13 @@ struct ContentView: View {
         isChecking = true
         defer { isChecking = false }
         do {
-            // 存在確認用の軽いクエリ。テーブルが未作成でも
-            // エラーの内容で疎通自体はできているか判断できる
             _ = try await SupabaseManager.shared.client
-                .from("_dummy_connection_check")
+                .from("reports")
                 .select()
                 .limit(1)
                 .execute()
             connectionStatus = "成功"
         } catch {
-            // テーブルが存在しないエラーでも、Supabaseサーバーへの
-            // 到達自体はできていれば実質OK
             connectionStatus = "応答あり（詳細: \(error.localizedDescription)）"
         }
     }
