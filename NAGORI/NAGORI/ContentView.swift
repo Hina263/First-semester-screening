@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Supabase
+import CoreLocation
 
 struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
@@ -21,6 +22,8 @@ struct ContentView: View {
     
     // フォロー一覧画面を表示するためのフラグ
     @State private var showUserList = false
+    
+    @StateObject private var locationManager = LocationManager()
 
     var body: some View {
         VStack(spacing: 16) {
@@ -58,6 +61,46 @@ struct ContentView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.pink)
+
+            Divider()
+            
+            // MARK: - M-05 位置情報取得・丸め処理の動作確認エリア
+            VStack(alignment: .leading, spacing: 10) {
+                Text("📍 位置情報取得テスト (M-05)")
+                    .font(.headline)
+
+                if let raw = locationManager.rawLocation, let rounded = locationManager.roundedLocation {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("生座標 (Raw):")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Text("Lat: \(raw.latitude), Lon: \(raw.longitude)")
+                            .font(.footnote)
+
+                        Text("丸め座標 (Rounded 3桁):")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding(.top, 2)
+                        Text("Lat: \(rounded.latitude), Lon: \(rounded.longitude)")
+                            .font(.footnote)
+                            .bold()
+                            .foregroundColor(.blue)
+                    }
+                } else {
+                    Text("位置情報: 未取得")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+
+                Button("位置情報を取得する") {
+                    locationManager.requestPermission()
+                    locationManager.requestLocation()
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(10)
 
             Divider()
 
