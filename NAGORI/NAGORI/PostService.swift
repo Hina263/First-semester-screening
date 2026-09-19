@@ -20,7 +20,9 @@ enum PostService {
     /// リサイズ済みJPEGをStorageへ保存し、公開URLを返す
     static func uploadImage(_ data: Data) async throws -> String {
         let userId = try await client.auth.session.user.id
-        let path = "\(userId)/\(UUID().uuidString).jpg"
+        // SwiftのUUIDは大文字、PostgresのRLS（auth.uid()::text）は小文字で比較されるため
+        // 小文字に揃えないと「他人のフォルダへの書き込み」と判定されて弾かれる
+        let path = "\(userId.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
 
         try await client.storage
             .from(imageBucket)
