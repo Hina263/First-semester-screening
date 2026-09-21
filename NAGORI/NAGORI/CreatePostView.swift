@@ -33,9 +33,14 @@ struct CreatePostView: View {
     private let maxSpotNameLength = 30
     private let maxCommentLength = 140
 
-    /// 必須は「写真」と「都道府県」のみ（スポット名・コメントは任意）
+    /// 必須は「写真」＋「位置情報」のみ。
+    /// 現在地モード: GPS座標が取れていればOK（都道府県の入力は不要）
+    /// 手動モード: 都道府県の選択が必須（GPSは使わない）
     private var canSubmit: Bool {
-        selectedImage != nil && !prefecture.isEmpty && !isPosting
+        guard selectedImage != nil, !isPosting else { return false }
+        return useCurrentLocation
+            ? locationManager.roundedLocation != nil
+            : !prefecture.isEmpty
     }
 
     var body: some View {
@@ -74,11 +79,22 @@ struct CreatePostView: View {
                 Text(errorMessage ?? "")
             }
             .task {
-                // M-05: 画面を開いたタイミングで現在地を取りにいく（拒否されても投稿は可能）
-                locationManager.requestPermission()
-                locationManager.requestLocation()
+                // 現在地モードの時だけ位置情報取得関数を起動する
+                if useCurrentLocation {
+                    locationManager.requestPermission()
+                    locationManager.requestLocation()
+                }
+            }
+            .onChange(of: useCurrentLocation) { _, isOn in
+                if isOn {
+                    // 手動で選んでいた都道府県はリセットし、GPSからの自動判定に切り替える
+                    prefecture = ""
+                    locationManager.requestPermission()
+                    locationManager.requestLocation()
+                }
             }
             .onChange(of: locationManager.rawLocation?.latitude) { _, _ in
+                guard useCurrentLocation else { return }
                 Task { await fillPrefectureFromLocation() }
             }
         }
@@ -153,7 +169,12 @@ struct CreatePostView: View {
                 counter(count: spotName.count, limit: maxSpotNameLength)
             }
             .onChange(of: spotName) { _, new in
-                if new.count > maxSpotNameLength { spotName = String(new.prefix(maxSpotNameLength)) }
+                // IME変換中に同期的に書き換えると変換が壊れるため、1サイクル遅らせて反映する
+                if new.count > maxSpotNameLength {
+                    DispatchQueue.main.async {
+                        spotName = String(new.prefix(maxSpotNameLength))
+                    }
+                }
             }
 
             Toggle(isOn: $useCurrentLocation) {
@@ -163,15 +184,18 @@ struct CreatePostView: View {
                 }
             }
 
-            Picker(selection: $prefecture) {
-                Text("選択してください").tag("")
-                ForEach(Self.prefectures, id: \.self) { Text($0).tag($0) }
-            } label: {
-                HStack {
-                    Image(systemName: "map.fill").foregroundStyle(.orange)
-                    Text("都道府県")
-                    if prefecture.isEmpty {
-                        Text("(必須)").font(.caption).foregroundStyle(.red)
+            // 現在地モードの時は都道府県の手動選択は不要（GPSから自動判定するため非表示）
+            if !useCurrentLocation {
+                Picker(selection: $prefecture) {
+                    Text("選択してください").tag("")
+                    ForEach(Self.prefectures, id: \.self) { Text($0).tag($0) }
+                } label: {
+                    HStack {
+                        Image(systemName: "map.fill").foregroundStyle(.orange)
+                        Text("都道府県")
+                        if prefecture.isEmpty {
+                            Text("(必須)").font(.caption).foregroundStyle(.red)
+                        }
                     }
                 }
             }
@@ -182,8 +206,10 @@ struct CreatePostView: View {
                 if locationManager.roundedLocation != nil {
                     Text("※現在地を約100m四方に丸めた座標を保存します。")
                 } else {
-                    Text("※現在地を取得中です。取得できない場合も、都道府県を選べば投稿できます。")
+                    Text("※現在地を取得中です。取得できない場合は、トグルをオフにして都道府県を選択してください。")
                 }
+            } else {
+                Text("※GPSは使わず、選んだ都道府県の代表地点を座標として保存します。")
             }
         }
     }
@@ -202,7 +228,12 @@ struct CreatePostView: View {
                 counter(count: comment.count, limit: maxCommentLength)
             }
             .onChange(of: comment) { _, new in
-                if new.count > maxCommentLength { comment = String(new.prefix(maxCommentLength)) }
+                // IME変換中に同期的に書き換えると変換が壊れるため、1サイクル遅らせて反映する
+                if new.count > maxCommentLength {
+                    DispatchQueue.main.async {
+                        comment = String(new.prefix(maxCommentLength))
+                    }
+                }
             }
         }
     }
@@ -217,8 +248,7 @@ struct CreatePostView: View {
 
     @MainActor
     private func fillPrefectureFromLocation() async {
-        guard prefecture.isEmpty,
-              let coordinate = locationManager.rawLocation else { return }
+        guard useCurrentLocation, let coordinate = locationManager.rawLocation else { return }
 
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         let placemarks = try? await CLGeocoder().reverseGeocodeLocation(
@@ -244,8 +274,20 @@ struct CreatePostView: View {
             }
             let imageUrl = try await PostService.uploadImage(data)
 
-            // 丸め済みの座標を使う（トグルOFF・取得失敗時はnil = 位置情報なしで投稿）
-            let coordinate = useCurrentLocation ? locationManager.roundedLocation : nil
+            let coordinate: CLLocationCoordinate2D?
+            if useCurrentLocation {
+                // 現在地モード：GPSで取得し丸め済みの座標をそのまま使う
+                coordinate = locationManager.roundedLocation
+            } else {
+                // 手動モード：GPSは使わず、選んだ都道府県の代表座標を使う。
+                // ただし同じ県を選んだ投稿同士が完全に同じ座標へ重なってしまうと
+                // 個別ピンが見分けられなくなるため、少しランダムにズラす
+                if let center = Self.prefectureCenters[prefecture] {
+                    coordinate = Self.jittered(center)
+                } else {
+                    coordinate = nil
+                }
+            }
 
             var post = try await PostService.createPost(
                 imageUrl: imageUrl,
@@ -274,6 +316,68 @@ struct CreatePostView: View {
         "奈良県", "和歌山県", "鳥取県", "島根県", "岡山県", "広島県", "山口県",
         "徳島県", "香川県", "愛媛県", "高知県", "福岡県", "佐賀県", "長崎県",
         "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"
+    ]
+
+    // MARK: - 都道府県の代表座標（手動モードでピンを置く場所）
+    // 各県庁所在地付近のおおよその座標。正確な位置情報の代わりに使う簡易マッピング。
+
+    /// 代表座標に半径約0.05度（東京付近で数km程度）のランダムなズレを加える。
+    /// 同じ県を手動選択した投稿同士が完全に同じ座標へ重ならないようにするため。
+    private static func jittered(_ coordinate: CLLocationCoordinate2D, radius: Double = 0.05) -> CLLocationCoordinate2D {
+        CLLocationCoordinate2D(
+            latitude: coordinate.latitude + Double.random(in: -radius...radius),
+            longitude: coordinate.longitude + Double.random(in: -radius...radius)
+        )
+    }
+
+    static let prefectureCenters: [String: CLLocationCoordinate2D] = [
+        "北海道": .init(latitude: 43.0642, longitude: 141.3469),
+        "青森県": .init(latitude: 40.8244, longitude: 140.7400),
+        "岩手県": .init(latitude: 39.7036, longitude: 141.1527),
+        "宮城県": .init(latitude: 38.2688, longitude: 140.8721),
+        "秋田県": .init(latitude: 39.7186, longitude: 140.1024),
+        "山形県": .init(latitude: 38.2404, longitude: 140.3633),
+        "福島県": .init(latitude: 37.7503, longitude: 140.4676),
+        "茨城県": .init(latitude: 36.3418, longitude: 140.4468),
+        "栃木県": .init(latitude: 36.5658, longitude: 139.8836),
+        "群馬県": .init(latitude: 36.3907, longitude: 139.0604),
+        "埼玉県": .init(latitude: 35.8617, longitude: 139.6455),
+        "千葉県": .init(latitude: 35.6073, longitude: 140.1063),
+        "東京都": .init(latitude: 35.6895, longitude: 139.6917),
+        "神奈川県": .init(latitude: 35.4478, longitude: 139.6425),
+        "新潟県": .init(latitude: 37.9026, longitude: 139.0232),
+        "富山県": .init(latitude: 36.6953, longitude: 137.2113),
+        "石川県": .init(latitude: 36.5947, longitude: 136.6256),
+        "福井県": .init(latitude: 36.0652, longitude: 136.2216),
+        "山梨県": .init(latitude: 35.6642, longitude: 138.5685),
+        "長野県": .init(latitude: 36.6513, longitude: 138.1810),
+        "岐阜県": .init(latitude: 35.3912, longitude: 136.7223),
+        "静岡県": .init(latitude: 34.9769, longitude: 138.3831),
+        "愛知県": .init(latitude: 35.1802, longitude: 136.9066),
+        "三重県": .init(latitude: 34.7303, longitude: 136.5086),
+        "滋賀県": .init(latitude: 35.0045, longitude: 135.8686),
+        "京都府": .init(latitude: 35.0212, longitude: 135.7556),
+        "大阪府": .init(latitude: 34.6863, longitude: 135.5200),
+        "兵庫県": .init(latitude: 34.6913, longitude: 135.1830),
+        "奈良県": .init(latitude: 34.6851, longitude: 135.8049),
+        "和歌山県": .init(latitude: 34.2260, longitude: 135.1675),
+        "鳥取県": .init(latitude: 35.5039, longitude: 134.2381),
+        "島根県": .init(latitude: 35.4723, longitude: 133.0505),
+        "岡山県": .init(latitude: 34.6618, longitude: 133.9350),
+        "広島県": .init(latitude: 34.3966, longitude: 132.4596),
+        "山口県": .init(latitude: 34.1859, longitude: 131.4714),
+        "徳島県": .init(latitude: 34.0658, longitude: 134.5593),
+        "香川県": .init(latitude: 34.3401, longitude: 134.0434),
+        "愛媛県": .init(latitude: 33.8417, longitude: 132.7658),
+        "高知県": .init(latitude: 33.5597, longitude: 133.5311),
+        "福岡県": .init(latitude: 33.6064, longitude: 130.4181),
+        "佐賀県": .init(latitude: 33.2494, longitude: 130.2989),
+        "長崎県": .init(latitude: 32.7448, longitude: 129.8737),
+        "熊本県": .init(latitude: 32.7898, longitude: 130.7417),
+        "大分県": .init(latitude: 33.2382, longitude: 131.6126),
+        "宮崎県": .init(latitude: 31.9111, longitude: 131.4239),
+        "鹿児島県": .init(latitude: 31.5602, longitude: 130.5581),
+        "沖縄県": .init(latitude: 26.2124, longitude: 127.6809)
     ]
 }
 

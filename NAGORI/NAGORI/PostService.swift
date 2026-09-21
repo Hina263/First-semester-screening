@@ -102,6 +102,69 @@ enum PostService {
             .execute()
             .value
     }
+
+    // MARK: - マイページ用（M-03 自分の投稿一覧）
+
+    /// 指定したユーザーの投稿を新しい順に全件取得する（60日を過ぎてマップから消えたものも含む）
+    static func fetchPosts(authorId: UUID) async throws -> [Post] {
+        try await client
+            .from("posts")
+            .select()
+            .eq("author_id", value: authorId)
+            .order("posted_at", ascending: false)
+            .execute()
+            .value
+    }
+
+    /// 投稿を削除する（自分の投稿のみが対象。RLS側でも本人以外は削除できない前提）
+    static func deletePost(id: UUID) async throws {
+        try await client
+            .from("posts")
+            .delete()
+            .eq("id", value: id)
+            .execute()
+    }
+
+    /// 投稿を編集する（写真・スポット名・コメント。自分の投稿のみが対象）
+    static func updatePost(
+        id: UUID,
+        imageUrl: String?,
+        locationName: String,
+        comment: String
+    ) async throws {
+        struct PostUpdate: Encodable {
+            let image_url: String?
+            let location_name: String?
+            let comment: String?
+        }
+        let update = PostUpdate(
+            image_url: imageUrl,
+            location_name: locationName.isEmpty ? nil : locationName,
+            comment: comment.isEmpty ? nil : comment
+        )
+        try await client
+            .from("posts")
+            .update(update)
+            .eq("id", value: id)
+            .execute()
+    }
+
+    // MARK: - ブロック中ユーザー
+
+    /// 自分がブロックしているユーザーIDの一覧を取得する（マップの投稿を絞り込むのに使う）
+    static func fetchBlockedUserIds() async throws -> [UUID] {
+        let myId = try await client.auth.session.user.id
+        struct BlockRow: Decodable {
+            let blocked_id: UUID
+        }
+        let rows: [BlockRow] = try await client
+            .from("blocks")
+            .select("blocked_id")
+            .eq("blocker_id", value: myId)
+            .execute()
+            .value
+        return rows.map { $0.blocked_id }
+    }
 }
 
 // MARK: - エラー

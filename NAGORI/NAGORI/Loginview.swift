@@ -16,6 +16,18 @@ struct LoginView: View {
     @State private var isSubmitting = false
     @FocusState private var focusedField: Field?
 
+    // 桜を意味する単語を フランス語・イタリア語・韓国語・ベトナム語・中国語・英語・日本語 の順で
+    private let sakuraWords = [
+        "Fleur de cerisier",
+        "Fiore di ciliegio",
+        "벚꽃",
+        "Hoa anh đào",
+        "樱花",
+        "Cherry Blossom",
+        "桜"
+    ]
+    @State private var currentWordIndex = 0
+
     private enum Field {
         case email, password
     }
@@ -88,14 +100,27 @@ struct LoginView: View {
 
     private var titleSection: some View {
         VStack(spacing: 10) {
-            Text("🌸")
-                .font(.system(size: 40))
-            Text("散り桜マップ")
+            Text("NAGORI")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
-            Text("散りゆく桜の瞬間を、みんなで共有しよう")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            // 桜を意味する単語を2.5秒おきにフェードしながら切り替える
+            Text(sakuraWords[currentWordIndex])
+                .font(.callout.weight(.medium))
+                .foregroundStyle(Color.pink.opacity(0.75))
+                .multilineTextAlignment(.center)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.horizontal, 24)
+                .id(currentWordIndex)
+                .transition(.opacity)
+                .task {
+                    while !Task.isCancelled {
+                        try? await Task.sleep(nanoseconds: 2_500_000_000)
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            currentWordIndex = (currentWordIndex + 1) % sakuraWords.count
+                        }
+                    }
+                }
         }
     }
 

@@ -34,7 +34,7 @@ struct RootView: View {
                 // まだusersに行がない=初回。専用の初期設定画面を表示
                 ProfileSetupView()
             } else {
-                ContentView() // TODO: 友人が追加するメインマップ画面に置き換える
+                MainMapView()
             }
         }
     }
